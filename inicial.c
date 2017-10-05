@@ -209,7 +209,7 @@ void fx(float x, float *f, float *dxdy){
     r2  = R2+_Z*_Z;
     r = sqrt(r2);
     R = sqrt(R2);
-    *(dxdy+1) = Den(x,_Y,_Z,0)*(Grav_pl(x,_Y,_Z)*x/r);//+Grav_gas(x,_Y,_Z)*x/R);
+    *(dxdy+1) = Den(x,_Y,_Z,1)*(Grav_pl(x,_Y,_Z)*x/r)+Grav_gas(x,_Y,_Z)*x/R);
 }
 
 //y axis:
@@ -219,7 +219,7 @@ void fy(float y, float *f, float *dxdy){
     r2  = R2+_Z*_Z;
     r = sqrt(r2);
     R = sqrt(R2);
-    *(dxdy+1) = Den(_X,y,_Z,0)*(Grav_pl(_X,y,_Z)*y/r);//+Grav_gas(_X,y,_Z)*y/R);
+    *(dxdy+1) = Den(_X,y,_Z,1)*(Grav_pl(_X,y,_Z)*y/r)+Grav_gas(_X,y,_Z)*y/R);
 
 }
 //z axis:
@@ -229,7 +229,7 @@ void fz(float z, float *f, float *dxdy){
     r2  = R2+z*z;
     r = sqrt(r2);
     R = sqrt(R2);
-    *(dxdy+1) = Den(_X,_Y,z,0)*Grav_pl(_X,_Y,z)*z/r;
+    *(dxdy+1) = Den(_X,_Y,z,1)*Grav_pl(_X,_Y,z)*z/r;
 
 }
 
@@ -305,7 +305,7 @@ void Generate_Star_Vel(float *vx, float *vy, float *vz, float *X){//, float pls)
     odeint(sig2  ,1,_Y,r_cut_MAX,1e-6, 0.0001,0,&nok, &nbad, fy,rkqs);
     odeint(sig2+1,1,_Z,r_cut_MAX,1e-6, 0.0001,0,&nok, &nbad, fz,rkqs);
 
-    den = Den(_X,_Y,_Z,0);
+    den = Den(_X,_Y,_Z,1);
     for(i=0; i<3; sig2[i++]/=0.5*den);
 
     
@@ -356,50 +356,6 @@ void FixVel(float **dat, int N, float *v){
     free(v);
 }
 
-//WHY?!?!?!?!??!
-//This function calculates the escape velocity using the particles
-//inside an sphere of radius r^2 = x^2 + y^2 + z^2
-/*
-float *RealPot(float *x, float *y, float *z, int N){
-    int i;
-    float *ret, *r;
-    unsigned long *in, *irank;
-    FILE *vesc;
-    float tmp[2];
-
-    ret = (float *)malloc(N*sizeof(float));
-    r   = (float *)malloc(N*sizeof(float));
-
-    in      = (unsigned long *)malloc(N*sizeof(unsigned long));
-    irank   = (unsigned long *)malloc(N*sizeof(unsigned long));
-
-    //calculate the radial distance from the center to each particle
-    for(i=0;i<N;i++)
-        r[i] = sqrt(x[i]*x[i]+y[i]*y[i]+z[i]*z[i]);
-
-    //Count how many particles are inside that radius
-    //indexx and rank routines taken from Numerical Recipes in C, 2nd edition.
-    indexx(N,r-1,in-1);
-    rank(N,in-1,irank-1);
-
-    //for(i=0; i<N; i++) irank[i]-=1;
-
-    //Now, the escape velocity for each particle is saved:
-    for(i=0; i<N; i++){
-        ret[i] = sqrt(2*0.5*irank[i]*G/r[i]);
-    }
-
-    vesc = fopen("vesc.log","w");
-    for (i=0; i<N; i++){
-        tmp[0] = r[i];
-        tmp[1] = ret[i];
-        Print_Table(vesc,tmp,2);
-    }
-    fclose(vesc);
-
-    return ret;
-}
-*/
 int main(){
     float data[8],x,y,z,m,tcr;
     float **todos, *X,*Y,*Z, *VX,*VY,*VZ,*vesc;
@@ -450,7 +406,7 @@ int main(){
     tabla = fopen(nombre,"w");
     printf("\n");
 
-    potxf = Potencial(r_cut_MAX,0,0,0);
+    potxf = Potencial(r_cut_MAX,0,0,1);
     printf("seed: %ld\nRK\n\n", idum);
     todos = (float **)malloc(sizeof(float *)*N);
     X = (float *)malloc(sizeof(float)*N);
